@@ -6,6 +6,10 @@ using Words.Common;
 
 namespace Words1
 {
+    /// <summary>
+    /// First variant of the test task
+    /// Using Ninject
+    /// </summary>
     class Program
     {
         static void Main(string[] args)

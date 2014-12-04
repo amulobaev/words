@@ -8,6 +8,10 @@ using Words.Common;
 
 namespace Words2
 {
+    /// <summary>
+    /// Second varint
+    /// Program doesn't know about concrete input and output implementations
+    /// </summary>
     class Program
     {
         // Extensions collections
@@ -34,18 +38,42 @@ namespace Words2
             LoadExtensions();
 
             // Get input data
-            string inputText = ParseInputParam(inputParam);
+            string inputText = null;
+            try
+            {
+                inputText = ParseInputParam(inputParam);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error parsing input parameters");
+                Console.WriteLine(ex);
+                WaitInput();
+                return;
+            }
 
             // Find and count occurancies
             IOccurencies occurencies = new Occurencies();
             Dictionary<string, int> data = occurencies.Find(inputText);
 
             // Output result
-            ParseOutputParams(outputParam, data);
+            try
+            {
+                ParseOutputParams(outputParam, data);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error parsing output parameters");
+                Console.WriteLine(ex);
+            }
 
             WaitInput();
         }
 
+        /// <summary>
+        /// Parse input param and execute input extension
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
         private static string ParseInputParam(string s)
         {
             int index = s.IndexOf(":");
@@ -57,6 +85,11 @@ namespace Words2
             return extension.Read(source);
         }
 
+        /// <summary>
+        /// Parse output param and execute output extension
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="data"></param>
         private static void ParseOutputParams(string s, Dictionary<string, int> data)
         {
             int index = s.IndexOf(":");
@@ -96,34 +129,52 @@ namespace Words2
             string[] files = GetFiles(path, "Words.*.dll");
             foreach (string file in files)
             {
-                Assembly assemblyForReflection = Assembly.LoadFile(file);
+                Assembly assembly = Assembly.LoadFile(file);
+
                 // Input extensions
-                List<Type> inputTypes =
-                    assemblyForReflection.GetTypes()
-                        .Where(x => x.IsClass && typeof(IWordsInput).IsAssignableFrom(x))
-                        .ToList();
-                if (inputTypes.Any())
+                try
                 {
-                    //Assembly.LoadFile(file);
-                    foreach (Type inputType in inputTypes)
+                    List<Type> inputTypes =
+                        assembly.GetTypes()
+                            .Where(x => x.IsClass && typeof(IWordsInput).IsAssignableFrom(x))
+                            .ToList();
+                    if (inputTypes.Any())
                     {
-                        IWordsInput instance = (IWordsInput)Activator.CreateInstance(inputType);
-                        InputExtensions.Add(instance);
+                        //Assembly.LoadFile(file);
+                        foreach (Type inputType in inputTypes)
+                        {
+                            IWordsInput instance = (IWordsInput)Activator.CreateInstance(inputType);
+                            InputExtensions.Add(instance);
+                        }
                     }
                 }
-                // Output extensions
-                List<Type> outputTypes =
-                    assemblyForReflection.GetTypes()
-                        .Where(x => x.IsClass && typeof(IWordsOutput).IsAssignableFrom(x))
-                        .ToList();
-                if (outputTypes.Any())
+                catch (Exception ex)
                 {
-                    //Assembly.LoadFile(file);
-                    foreach (Type outputType in outputTypes)
+                    Console.WriteLine("Error loading input extension");
+                    Console.WriteLine(ex);
+                }
+
+                // Output extensions
+                try
+                {
+                    List<Type> outputTypes =
+                        assembly.GetTypes()
+                            .Where(x => x.IsClass && typeof(IWordsOutput).IsAssignableFrom(x))
+                            .ToList();
+                    if (outputTypes.Any())
                     {
-                        IWordsOutput instance = (IWordsOutput)Activator.CreateInstance(outputType);
-                        OutputExtensions.Add(instance);
+                        //Assembly.LoadFile(file);
+                        foreach (Type outputType in outputTypes)
+                        {
+                            IWordsOutput instance = (IWordsOutput)Activator.CreateInstance(outputType);
+                            OutputExtensions.Add(instance);
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error loading output extension");
+                    Console.WriteLine(ex);
                 }
             }
 

@@ -51,6 +51,7 @@ namespace Words.Output.Mssql
                     }
                 }
 
+                Console.WriteLine("Data exported to MS SQL base");
             }
             catch (Exception ex)
             {
